@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulário Dinâmico</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-image: url('imagem.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="#">Título do Projeto</a>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Criar</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Importar</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container mt-4">
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Formulário Padrões do CSV</h2>
+        <form id="csv-form">
+          <div class="mb-3">
+            <label for="file-name">Nome do arquivo:</label>
+            <input type="text" id="file-name" name="file-name" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="num-lines">Número de Linhas:</label>
+            <input type="number" id="num-lines" name="num-lines" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="separator">Tipo de separador:</label>
+            <select id="separator" name="separator" class="form-control">
+              <option value=",">,</option>
+              <option value=";">;</option>
+              <option value=" ">Espaço</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <h2>Formulário Campos do CSV</h2>
+        <form id="field-form">
+          <div class="mb-3">
+            <button type="button" id="add-field-btn" class="btn btn-primary">Adicionar Campo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <h2>Tabela de Campos</h2>
+      <table id="field-table" class="table">
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Nome do Campo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="mt-4">
+      <button type="button" id="generate-csv-btn" class="btn btn-success">Gerar CSV</button>
+    </div>
+  </main>
+
+  <footer class="mt-4 text-center">
+    <p>Desenvolvido por [Seu Nome]</p>
+    <ul class="list-inline">
+      <li class="list-inline-item"><a href="[Seu Perfil no LinkedIn]">LinkedIn</a></li>
+      <li class="list-inline-item"><a href="[Seu Perfil no GitHub]">GitHub</a></li>
+    </ul>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // JavaScript para a criação dinâmica de campos e interações
+
+    // Função para adicionar um novo campo ao formulário
+    function addField() {
+      const fieldForm = document.getElementById('field-form');
+      const categoryOptions = {
+        'Informações Pessoais': ['Nome', 'CPF', 'Idade'],
+        'Informações Profissionais': ['Cargo', 'Empresa', 'Experiência']
+      };
+
+      const categorySelect = document.createElement('select');
+      categorySelect.name = 'category';
+      categorySelect.className = 'form-control mb-2';
+      categorySelect.addEventListener('change', handleCategoryChange);
+
+      for (const category in categoryOptions) {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+      }
+
+      const fieldDiv = document.createElement('div');
+      fieldDiv.className = 'mb-3';
+      fieldDiv.appendChild(categorySelect);
+
+      fieldForm.insertBefore(fieldDiv, fieldForm.lastElementChild);
+    }
+
+    // Função para manipular a mudança na seleção de categoria
+    function handleCategoryChange(event) {
+      const category = event.target.value;
+      const fieldForm = event.target.parentNode.parentNode;
+      const fieldDiv = event.target.parentNode;
+
+      // Remover campos anteriores
+      const previousFields = fieldDiv.querySelectorAll('.field');
+      previousFields.forEach(field => field.remove());
+
+      // Adicionar campos da categoria selecionada
+      const categoryFields = categoryOptions[category];
+      categoryFields.forEach(fieldName => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = 'field';
+        input.className = 'form-control field mb-2';
+        input.placeholder = 'Nome do Campo';
+
+        const fieldWrapper = document.createElement('div');
+        fieldWrapper.appendChild(input);
+        fieldDiv.insertBefore(fieldWrapper, fieldDiv.lastElementChild);
+      });
+    }
+
+    // Função para remover um campo da tabela
+    function removeField(event) {
+      const row = event.target.parentNode.parentNode;
+      row.remove();
+    }
+
+    // Evento de clique no botão "Adicionar Campo"
+    const addFieldBtn = document.getElementById('add-field-btn');
+    addFieldBtn.addEventListener('click', addField);
+
+    // Evento de clique no botão "Remover"
+    const fieldTable = document.getElementById('field-table');
+    fieldTable.addEventListener('click', function(event) {
+      if (event.target.matches('.remove-btn')) {
+        removeField(event);
+      }
+    });
+
+    // Evento de clique no botão "Gerar CSV"
+    const generateCsvBtn = document.getElementById('generate-csv-btn');
+    generateCsvBtn.addEventListener('click', function() {
+      const csvForm = document.getElementById('csv-form');
+      const fieldTableRows = fieldTable.querySelectorAll('tbody tr');
+      const formData = new FormData(csvForm);
+
+      // Obter os dados do formulário
+      const csvData = {};
+      for (const [name, value] of formData.entries()) {
+        csvData[name] = value;
+      }
+
+      // Obter os campos selecionados
+      const fields = [];
+      fieldTableRows.forEach(row => {
+        const category = row.cells[0].textContent;
+        const fieldName = row.cells[1].textContent;
+        fields.push({ category: category, fieldName });
+      });
+
+      // Gerar o arquivo CSV com base nas configurações e campos selecionados
+      console.log('Arquivo CSV gerado:', csvData);
+      console.log('Campos selecionados:', fields);
+    });
+  </script>
+</body>
+</html>
