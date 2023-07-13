@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CsvFaker4Devs</title>
-  <link rel="stylesheet" href="static/css/bootstrap.css">
+  <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:400,700&display=swap">
   <style>
     /* Estilização personalizada */
@@ -97,68 +97,104 @@
   <main class="container">
     <h1>Gerador de Csv</h1>
     <!-- #######################FORMULARIO####################### -->
-    <form method="POST" action="{% url 'coletar_dados' %}">
+    <form id="formularioCategorias" method="POST" action="{% url 'adicionar_campo' %}">
       {% csrf_token %}
       <div class="form-group">
-        <label for="nlinhas">Quantidade de Linhas</label>
-        <div class="input-group">
-          <input type="number" id="nlinhas" name="nlinhas" class="form-control" min="0" required>
-        </div>
+        <label for="tipoDado">Tipo de Dado</label>
+        <select name="tipoDado" id="tipoDado" class="form-control" required>
+          <option value="informacoes_pessoais">Informações Pessoais</option>
+          <option value="informacoes_endereco">Informações de Endereço</option>
+          <option value="informacoes_profissionais">Informações Profissionais</option>
+          <option value="informacoes_educacao">Informações de Educação</option>
+          <option value="informacoes_financeiras">Informações Financeiras</option>
+        </select>
       </div>
       <div class="form-group">
-        <label for="tipoDado">Tipo de Dado</label>
-        <input type="text" id="tipoDado" name="tipoDado" class="form-control" required>
+        <label for="campoAdicional">Campo Adicional</label>
+        <select name="campoAdicional" id="campoAdicional" class="form-control" required>
+          <!-- Opções vazias inicialmente -->
+        </select>
       </div>
-      <button type="submit" class="btn btn-primary">Gerar</button>
+      <button type="submit" class="btn btn-primary">Adicionar Campo</button>
       <script>
-        function increase() {
-          var input = document.getElementById("nlinhas");
-          input.stepUp();
-        }
-    
-        function decrease() {
-          var input = document.getElementById("nlinhas");
-          input.stepDown();
-        }
+        var tipoDadoSelect = document.getElementById("tipoDado");
+        var campoAdicionalSelect = document.getElementById("campoAdicional");
+        var camposAdicionais = {
+          informacoes_pessoais: ["Nome", "Sobrenome", "Nome Completo", "CPF", "Nome do Cônjuge", "Nome da Mãe", "Nome do Pai", "Telefone", "Endereço de E-mail", "Nacionalidade", "Estado Civil", "Gênero", "Data Nascimento", "RG", "Peso", "Altura", "Tipo Sanguíneo"],
+          informacoes_endereco: ["Pais", "Estado", "Cidade", "Bairro", "Complemento", "Número da Casa", "Rua", "CEP"],
+          informacoes_profissionais: ["CNPJ", "Slogan", "Nome da Empresa", "Cargo"],
+          informacoes_educacao: ["Idiomas", "Área de Estudo/Especialização", "Ano de Formação/Conclusão", "Nível de Educação", "Instituição de Ensino"],
+          informacoes_financeiras: ["Orçamento Mensal", "Patrimônio Líquido", "Declaração de Imposto de Renda", "Seguros", "Empréstimos e Dívidas", "Investimentos", "Renda Mensal", "Histórico de Transações Financeiras", "Informações de Cartão de Crédito", "Número de Conta Bancária"]
+        };
+      
+        tipoDadoSelect.addEventListener("change", function() {
+          var selectedValue = this.value;
+          var campoAdicionalOptions = camposAdicionais[selectedValue];
+      
+          campoAdicionalSelect.innerHTML = ""; // Limpa as opções existentes
+      
+          if (campoAdicionalOptions) {
+            for (var i = 0; i < campoAdicionalOptions.length; i++) {
+              var option = document.createElement("option");
+              option.value = campoAdicionalOptions[i];
+              option.textContent = campoAdicionalOptions[i];
+              campoAdicionalSelect.appendChild(option);
+            }
+          }
+        });
       </script>
     </form>
     <!-- #######################FECHA_FORMULARIO####################### -->
+    <br>
     <h2>Seus campos:</h2>
-    <table class="table">
+    <form id="formularioTabela" method="POST">
+      <div class="col">
+        <div class="form-group col-md-2">
+          <label for="nomeArquivo">Nome do Arquivo: </label>
+          <input placeholder="Ex: MeuArquivo" type="text" id="nomeArquivo" name="nlinhas" class="form-control" min="0">
+        </div>
+        <div class="form-group col-md-2">
+          <label for="nlinhas">Quantidade de Linhas: </label>
+          <input placeholder="Ex: 50 linhas" type="number" id="nlinhas" name="nlinhas" class="form-control" min="0">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success">Gerar CSV</button>
+    </form>
+    <!-- #######################TABELA####################### -->
+    <table class="table" id="tabelaCampos">
       <thead>
         <tr>
           <th>Nome do campo</th>
-          <th>Tipo de campo</th>
+          <th>Categoria</th>
           <th>Ações</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Nome do usuário</td>
-          <td>Nome [Informações Pessoais]</td>
-          <td class="table-buttons">
-            <button class="btn btn-secondary">Editar</button>
-            <button class="btn btn-secondary">Deletar</button>
-          </td>
-        </tr>
-        <tr>
-          <td>CPF</td>
-          <td>CPF [Informações Pessoais]</td>
-          <td class="table-buttons">
-            <button class="btn btn-secondary">Editar</button>
-            <button class="btn btn-secondary">Deletar</button>
-          </td>
-        </tr>
+        {% for chave, valor in campos_tabela.items %}
+          <tr>
+              <td>
+                  {% csrf_token %}
+                  <input type="text" name="nome_campo_usuario" class="form-control" placeholder="Digite o nome do Campo" required>
+                </td>
+                <td>
+                  {{ valor.tipoDado }} | {{ valor.campoAdicional }}
+                </td>
+              <td class="table-buttons">
+                <button class="btn btn-primary" data-id="{{ forloop.counter }}">Editar</button>
+                <button class="btn btn-danger" data-id="{{ forloop.counter }}">Deletar</button>
+              </td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
+    <!-- #######################FECHA_TABELA####################### -->
   </main>
   
   <footer class="footer">
     <div class="social-icons">
       <!-- Adicione os ícones das redes sociais -->
-      <a href="#"><img src="caminho/para/icone-facebook.png" alt="Facebook"></a>
-      <a href="#"><img src="caminho/para/icone-twitter.png" alt="Twitter"></a>
-      <a href="#"><img src="caminho/para/icone-instagram.png" alt="Instagram"></a>
+      <a href="#"><img src="caminho/para/icone-github.png" alt="GitHub"></a>
+      <a href="#"><img src="caminho/para/icone-linkedin.png" alt="Linkedin"></a>
     </div>
     <p>Desenvolvido por Guilherme Tomelin dos Santos</p>
   </footer>
