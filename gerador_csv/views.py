@@ -15,29 +15,37 @@ def gerador_view(request):
 
 def coletar_dados(request):
     if request.method == 'POST':
-        nlinhas = int(request.POST['nlinhas'])
-        tipo_dado = request.POST['tipoDado']
+        linhas_tabela = {}
 
-        categorias = ["Nome","CPF","Idade","Cidade","Profissão"]
+        for chave, valor in request.POST.items():
+            if chave.startswith('nome_campo_usuario_'):
+                index = chave.split('_')[-1]
+                linhas_tabela[index] = {
+                    'nome_campo': valor,
+                    'campo_adicional': request.POST.get('valor.campoAdicional'),
+                }
+                print(f'Index: {index}, Dados: {linhas_tabela[index]}')
 
+        nome_arquivo = request.POST.get('nome_arquivo')
+        print(nome_arquivo)
+        nlinhas = int(request.POST.get('nlinhas'))
         print(nlinhas)
-        print(categorias)
-        print(tipo_dado)
+        print()
+        print()
+        print()
+        print("--------------------------------------------------------------------")
+        print(linhas_tabela)
+        # Aqui você pode usar a lógica adequada para gerar o CSV com os dados da tabela
 
+        # Retorne o arquivo CSV como resposta
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}.csv"'
 
-        #Utilizando classe de validação
-        if ValidaFormulario.valida_nlinhas(nlinhas) is True:
-            print('As linhas foram validadas com sucesso.')
-        else:
-            print('Linhas invalidas.')
+        # Aqui você pode usar o módulo csv do Django para escrever os dados no objeto response
+        writer = csv.writer(response)
+        # Escreva os dados no CSV usando writer.writerow() ou writer.writerows()
 
-        gera_csv(nlinhas, categorias)
-
-
-        resposta = f"Os dados enviados foram: {request.POST['nlinhas']} e {request.POST['tipoDado']}"
-        return HttpResponse(resposta)
-    
-    return render(request, 'index.html')
+        return response
 
 #------------------------Lógica para Gerar Csv------------------------
 

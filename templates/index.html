@@ -147,46 +147,48 @@
     <!-- #######################FECHA_FORMULARIO####################### -->
     <br>
     <h2>Seus campos:</h2>
-    <form id="formularioTabela" method="POST">
+    <!-- #######################TABELA####################### -->
+    <form id="formulario" method="POST" action="coletar_dados">
+      {% csrf_token %}
       <div class="col">
         <div class="form-group col-md-2">
-          <label for="nomeArquivo">Nome do Arquivo: </label>
-          <input placeholder="Ex: MeuArquivo" type="text" id="nomeArquivo" name="nlinhas" class="form-control" min="0">
+          <label for="nomeArquivo">Nome do Arquivo:</label>
+          <input placeholder="Ex: MeuArquivo" type="text" id="nomeArquivo" name="nomeArquivo" class="form-control" min="0">
         </div>
         <div class="form-group col-md-2">
-          <label for="nlinhas">Quantidade de Linhas: </label>
+          <label for="nlinhas">Quantidade de Linhas:</label>
           <input placeholder="Ex: 50 linhas" type="number" id="nlinhas" name="nlinhas" class="form-control" min="0">
         </div>
       </div>
+    
+      <table class="table" id="tabelaCampos">
+        <thead>
+          <tr>
+            <th>Nome do campo</th>
+            <th>Categoria</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for chave, valor in campos_tabela.items %}
+          <tr>
+            <td>
+              <input type="text" name="nome_campo_usuario_{{ chave }}" class="form-control" placeholder="Digite o nome do Campo" required>
+            </td>
+            <td>
+              {{ valor.tipoDado }} | {{ valor.campoAdicional }}
+              <input type="hidden" >
+            </td>
+            <td class="table-buttons">
+              <button class="btn btn-primary" data-id="{{ forloop.counter }}">Editar</button>
+              <button class="btn btn-danger" data-id="{{ forloop.counter }}">Deletar</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       <button type="submit" class="btn btn-success">Gerar CSV</button>
     </form>
-    <!-- #######################TABELA####################### -->
-    <table class="table" id="tabelaCampos">
-      <thead>
-        <tr>
-          <th>Nome do campo</th>
-          <th>Categoria</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for chave, valor in campos_tabela.items %}
-          <tr>
-              <td>
-                  {% csrf_token %}
-                  <input type="text" name="nome_campo_usuario" class="form-control" placeholder="Digite o nome do Campo" required>
-                </td>
-                <td>
-                  {{ valor.tipoDado }} | {{ valor.campoAdicional }}
-                </td>
-              <td class="table-buttons">
-                <button class="btn btn-primary" data-id="{{ forloop.counter }}">Editar</button>
-                <button class="btn btn-danger" data-id="{{ forloop.counter }}">Deletar</button>
-              </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
     <!-- #######################FECHA_TABELA####################### -->
   </main>
   
