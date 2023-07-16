@@ -97,57 +97,6 @@
   <main class="container">
     <h1>Gerador de Csv</h1>
     <!-- #######################FORMULARIO####################### -->
-    <form id="formularioCategorias" method="POST" action="{% url 'adicionar_campo' %}">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="tipoDado">Tipo de Dado</label>
-        <select name="tipoDado" id="tipoDado" class="form-control" required>
-          <option value="informacoes_pessoais">Informações Pessoais</option>
-          <option value="informacoes_endereco">Informações de Endereço</option>
-          <option value="informacoes_profissionais">Informações Profissionais</option>
-          <option value="informacoes_educacao">Informações de Educação</option>
-          <option value="informacoes_financeiras">Informações Financeiras</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="campoAdicional">Campo Adicional</label>
-        <select name="campoAdicional" id="campoAdicional" class="form-control" required>
-          <!-- Opções vazias inicialmente -->
-        </select>
-      </div>
-      <button type="submit" class="btn btn-primary">Adicionar Campo</button>
-      <script>
-        var tipoDadoSelect = document.getElementById("tipoDado");
-        var campoAdicionalSelect = document.getElementById("campoAdicional");
-        var camposAdicionais = {
-          informacoes_pessoais: ["Nome", "Sobrenome", "Nome Completo", "CPF", "Nome do Cônjuge", "Nome da Mãe", "Nome do Pai", "Telefone", "Endereço de E-mail", "Nacionalidade", "Estado Civil", "Gênero", "Data Nascimento", "RG", "Peso", "Altura", "Tipo Sanguíneo"],
-          informacoes_endereco: ["Pais", "Estado", "Cidade", "Bairro", "Complemento", "Número da Casa", "Rua", "CEP"],
-          informacoes_profissionais: ["CNPJ", "Slogan", "Nome da Empresa", "Cargo"],
-          informacoes_educacao: ["Idiomas", "Área de Estudo/Especialização", "Ano de Formação/Conclusão", "Nível de Educação", "Instituição de Ensino"],
-          informacoes_financeiras: ["Orçamento Mensal", "Patrimônio Líquido", "Declaração de Imposto de Renda", "Seguros", "Empréstimos e Dívidas", "Investimentos", "Renda Mensal", "Histórico de Transações Financeiras", "Informações de Cartão de Crédito", "Número de Conta Bancária"]
-        };
-      
-        tipoDadoSelect.addEventListener("change", function() {
-          var selectedValue = this.value;
-          var campoAdicionalOptions = camposAdicionais[selectedValue];
-      
-          campoAdicionalSelect.innerHTML = ""; // Limpa as opções existentes
-      
-          if (campoAdicionalOptions) {
-            for (var i = 0; i < campoAdicionalOptions.length; i++) {
-              var option = document.createElement("option");
-              option.value = campoAdicionalOptions[i];
-              option.textContent = campoAdicionalOptions[i];
-              campoAdicionalSelect.appendChild(option);
-            }
-          }
-        });
-      </script>
-    </form>
-    <!-- #######################FECHA_FORMULARIO####################### -->
-    <br>
-    <h2>Seus campos:</h2>
-    <!-- #######################TABELA####################### -->
     <form id="formulario" method="POST" action="coletar_dados">
       {% csrf_token %}
       <div class="col">
@@ -165,29 +114,100 @@
         <thead>
           <tr>
             <th>Nome do campo</th>
-            <th>Categoria</th>
+            <th>Tipo de Dado</th>
+            <th>Campo Adicional</th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody>
-          {% for chave, valor in campos_tabela.items %}
-          <tr>
+          <tr id="linhaModelo" style="display: none;">
             <td>
-              <input type="text" name="nome_campo_usuario_{{ chave }}" class="form-control" placeholder="Digite o nome do Campo" required>
+              <input type="text" name="nome_campo_usuario[]" class="form-control" placeholder="Digite o nome do Campo" required>
             </td>
             <td>
-              {{ valor.tipoDado }} | {{ valor.campoAdicional }}
-              <input type="hidden" >
+              <select name="tipoDado[]" class="form-control tipoDadoSelect" required>
+                <option value="">Selecione o Tipo de Dado</option>
+                <option value="informacoes_pessoais">Informações Pessoais</option>
+                <option value="informacoes_endereco">Informações de Endereço</option>
+                <option value="informacoes_profissionais">Informações Profissionais</option>
+                <option value="informacoes_educacao">Informações de Educação</option>
+                <option value="informacoes_financeiras">Informações Financeiras</option>
+              </select>
+            </td>
+            <td>
+              <select name="campoAdicional[]" class="form-control campoAdicionalSelect" required disabled>
+                <option value="">Selecione o Campo Adicional</option>
+              </select>
             </td>
             <td class="table-buttons">
-              <button class="btn btn-primary" data-id="{{ forloop.counter }}">Editar</button>
-              <button class="btn btn-danger" data-id="{{ forloop.counter }}">Deletar</button>
+              <button class="btn btn-danger btn-remover-campo" type="button">Remover</button>
             </td>
           </tr>
-          {% endfor %}
         </tbody>
       </table>
+      <button id="adicionarCampo" type="button" class="btn btn-primary">Adicionar Campo</button>
       <button type="submit" class="btn btn-success">Gerar CSV</button>
+
+      <script>
+        function atualizarCampoAdicionalSelect(selectElement, tipoDado) {
+          const campoAdicionalSelect = selectElement.closest("tr").querySelector(".campoAdicionalSelect");
+          campoAdicionalSelect.innerHTML = "<option value=''>Selecione o Campo Adicional</option>";
+
+          if (tipoDado) {
+            const campoAdicionalOptions = {
+              informacoes_pessoais: ["Nome", "Sobrenome", "Nome Completo", "CPF", "Nome do Cônjuge", "Nome da Mãe", "Nome do Pai", "Telefone", "Endereço de E-mail", "Nacionalidade", "Estado Civil", "Gênero", "Data Nascimento", "RG", "Peso", "Altura", "Tipo Sanguíneo"],
+              informacoes_endereco: ["Pais", "Estado", "Cidade", "Bairro", "Complemento", "Número da Casa", "Rua", "CEP"],
+              informacoes_profissionais: ["CNPJ", "Slogan", "Nome da Empresa", "Cargo"],
+              informacoes_educacao: ["Idiomas", "Área de Estudo/Especialização", "Ano de Formação/Conclusão", "Nível de Educação", "Instituição de Ensino"],
+              informacoes_financeiras: ["Orçamento Mensal", "Patrimônio Líquido", "Declaração de Imposto de Renda", "Seguros", "Empréstimos e Dívidas", "Investimentos", "Renda Mensal", "Histórico de Transações Financeiras", "Informações de Cartão de Crédito", "Número de Conta Bancária"]
+            };
+
+            campoAdicionalOptions[tipoDado].forEach(option => {
+              const optionElement = document.createElement("option");
+              optionElement.value = option;
+              optionElement.textContent = option;
+              campoAdicionalSelect.appendChild(optionElement);
+            });
+
+            campoAdicionalSelect.disabled = false;
+          } else {
+            campoAdicionalSelect.disabled = true;
+          }
+        }
+
+        function adicionarCampo() {
+          const linhaModelo = document.getElementById("linhaModelo");
+          const tabelaCampos = document.getElementById("tabelaCampos");
+          const novaLinha = linhaModelo.cloneNode(true);
+          novaLinha.removeAttribute("id");
+          novaLinha.style.display = "";
+
+          const tipoDadoSelect = novaLinha.querySelector(".tipoDadoSelect");
+          const campoAdicionalSelect = novaLinha.querySelector(".campoAdicionalSelect");
+          const btnRemoverCampo = novaLinha.querySelector(".btn-remover-campo");
+
+          tipoDadoSelect.addEventListener("change", function() {
+            const selectedValue = this.value;
+            atualizarCampoAdicionalSelect(this, selectedValue);
+          });
+
+          campoAdicionalSelect.addEventListener("change", function() {
+            const tipoDadoSelect = this.closest("tr").querySelector(".tipoDadoSelect");
+            const selectedValue = tipoDadoSelect.value;
+            atualizarCampoAdicionalSelect(this, selectedValue);
+          });
+
+          btnRemoverCampo.addEventListener("click", function() {
+            const linhaRemover = this.closest("tr");
+            linhaRemover.parentNode.removeChild(linhaRemover);
+          });
+
+          tabelaCampos.appendChild(novaLinha);
+        }
+
+        const adicionarCampoBtn = document.getElementById("adicionarCampo");
+        adicionarCampoBtn.addEventListener("click", adicionarCampo);
+      </script>
     </form>
     <!-- #######################FECHA_TABELA####################### -->
   </main>
