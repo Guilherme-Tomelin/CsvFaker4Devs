@@ -97,16 +97,16 @@
   <main class="container">
     <h1>Gerador de Csv</h1>
     <!-- #######################FORMULARIO####################### -->
-    <form id="formulario" method="POST" action="coletar_dados">
+    <form id="formulario" method="POST" action="{% url 'gerar_csv' %}">
       {% csrf_token %}
       <div class="col">
         <div class="form-group col-md-2">
           <label for="nomeArquivo">Nome do Arquivo:</label>
-          <input placeholder="Ex: MeuArquivo" type="text" id="nomeArquivo" name="nomeArquivo" class="form-control" min="0">
+          <input placeholder="Ex: MeuArquivo" type="text" id="nomeArquivo" name="nomeArquivo" class="form-control" required>
         </div>
         <div class="form-group col-md-2">
           <label for="nlinhas">Quantidade de Linhas:</label>
-          <input placeholder="Ex: 50 linhas" type="number" id="nlinhas" name="nlinhas" class="form-control" min="0">
+          <input placeholder="Ex: 50 linhas" type="number" id="nlinhas" name="nlinhas" class="form-control" min="0" required>
         </div>
       </div>
     
@@ -146,13 +146,13 @@
         </tbody>
       </table>
       <button id="adicionarCampo" type="button" class="btn btn-primary">Adicionar Campo</button>
-      <button type="submit" class="btn btn-success">Gerar CSV</button>
-
+    
       <script>
-        function atualizarCampoAdicionalSelect(selectElement, tipoDado) {
+        function atualizarCampoAdicionalSelect(selectElement) {
           const campoAdicionalSelect = selectElement.closest("tr").querySelector(".campoAdicionalSelect");
+          const tipoDado = selectElement.value;
           campoAdicionalSelect.innerHTML = "<option value=''>Selecione o Campo Adicional</option>";
-
+    
           if (tipoDado) {
             const campoAdicionalOptions = {
               informacoes_pessoais: ["Nome", "Sobrenome", "Nome Completo", "CPF", "Nome do Cônjuge", "Nome da Mãe", "Nome do Pai", "Telefone", "Endereço de E-mail", "Nacionalidade", "Estado Civil", "Gênero", "Data Nascimento", "RG", "Peso", "Altura", "Tipo Sanguíneo"],
@@ -161,53 +161,47 @@
               informacoes_educacao: ["Idiomas", "Área de Estudo/Especialização", "Ano de Formação/Conclusão", "Nível de Educação", "Instituição de Ensino"],
               informacoes_financeiras: ["Orçamento Mensal", "Patrimônio Líquido", "Declaração de Imposto de Renda", "Seguros", "Empréstimos e Dívidas", "Investimentos", "Renda Mensal", "Histórico de Transações Financeiras", "Informações de Cartão de Crédito", "Número de Conta Bancária"]
             };
-
+    
             campoAdicionalOptions[tipoDado].forEach(option => {
               const optionElement = document.createElement("option");
               optionElement.value = option;
               optionElement.textContent = option;
               campoAdicionalSelect.appendChild(optionElement);
             });
-
+    
             campoAdicionalSelect.disabled = false;
           } else {
             campoAdicionalSelect.disabled = true;
           }
         }
-
+    
         function adicionarCampo() {
           const linhaModelo = document.getElementById("linhaModelo");
           const tabelaCampos = document.getElementById("tabelaCampos");
           const novaLinha = linhaModelo.cloneNode(true);
           novaLinha.removeAttribute("id");
           novaLinha.style.display = "";
-
+    
           const tipoDadoSelect = novaLinha.querySelector(".tipoDadoSelect");
           const campoAdicionalSelect = novaLinha.querySelector(".campoAdicionalSelect");
           const btnRemoverCampo = novaLinha.querySelector(".btn-remover-campo");
-
+    
           tipoDadoSelect.addEventListener("change", function() {
-            const selectedValue = this.value;
-            atualizarCampoAdicionalSelect(this, selectedValue);
+            atualizarCampoAdicionalSelect(this);
           });
-
-          campoAdicionalSelect.addEventListener("change", function() {
-            const tipoDadoSelect = this.closest("tr").querySelector(".tipoDadoSelect");
-            const selectedValue = tipoDadoSelect.value;
-            atualizarCampoAdicionalSelect(this, selectedValue);
-          });
-
+    
           btnRemoverCampo.addEventListener("click", function() {
             const linhaRemover = this.closest("tr");
             linhaRemover.parentNode.removeChild(linhaRemover);
           });
-
+    
           tabelaCampos.appendChild(novaLinha);
         }
-
+    
         const adicionarCampoBtn = document.getElementById("adicionarCampo");
         adicionarCampoBtn.addEventListener("click", adicionarCampo);
       </script>
+      <button type="submit" class="btn btn-success">Gerar CSV</button>
     </form>
     <!-- #######################FECHA_TABELA####################### -->
   </main>

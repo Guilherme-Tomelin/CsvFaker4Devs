@@ -1,12 +1,8 @@
 from django.urls import path
-from gerador_csv.views import index, coletar_dados, adicionar_campo
-
+from gerador_csv.views import index, gerar_csv
 
 
 urlpatterns = [
     path('', index),
-    path('coletar/', coletar_dados, name='coletar_dados'),
-    path('adicionar/', adicionar_campo, name='adicionar_campo'),
-    path('adicionar/coletar_dados', coletar_dados, name='coletar_dados'),
-
+    path('gerar_csv', gerar_csv, name='gerar_csv'),
 ]
